@@ -383,7 +383,16 @@ function buildElementControls() {
   }
 
   groups.forEach((group, i) => {
-    const color = PALETTE[i % PALETTE.length];
+    // Read actual color from the mesh material; fall back to palette
+    let color = PALETTE[i % PALETTE.length];
+    const getMeshColor = obj => {
+      if (obj.isMesh && obj.material && obj.material.color) {
+        return '#' + obj.material.color.clone().convertLinearToSRGB().getHexString();
+      }
+      for (const child of (obj.children || [])) { const c = getMeshColor(child); if (c) return c; }
+      return null;
+    };
+    for (const obj of group.objects) { const c = getMeshColor(obj); if (c) { color = c; break; } }
     meshState.push({ objects: group.objects, visible: true, opacity: 1 });
 
     const slug = `el-${i}`;
